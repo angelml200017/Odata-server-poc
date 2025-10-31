@@ -1,0 +1,254 @@
+const express = require('express');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+const cors = require('cors');
+const { 
+  formatODataCollection, 
+  formatODataSingleEntity, 
+  generateMetadata, 
+  generateServiceDocument, 
+  formatODataError 
+} = require('./odata-formatter');
+
+// Cargar datos de colas virtuales
+const virtualQueuesData = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'virtual-queues.json'), 'utf8')
+);
+
+const app = express();
+const PORT = process.env.PORT || 8443;
+const API_PREFIX = '/api/data/v1';
+const BASE_URL = `https://localhost:${PORT}${API_PREFIX}`;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Middleware para logging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+// Middleware para headers OData
+app.use((req, res, next) => {
+  res.set({
+    'OData-Version': '4.0',
+    'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false;charset=utf-8'
+  });
+  next();
+});
+
+// Función para parsear parámetros de consulta OData
+function parseODataQuery(query) {
+  const params = {};
+  
+  if (query.$top) {
+    params.$top = parseInt(query.$top);
+  }
+  
+  if (query.$skip) {
+    params.$skip = parseInt(query.$skip);
+  }
+  
+  if (query.$count === 'true') {
+    params.$count = true;
+  }
+  
+  if (query.$filter) {
+    params.$filter = query.$filter;
+  }
+  
+  return params;
+}
+
+// Función para aplicar filtros
+function applyFilter(data, filterExpression) {
+  if (!filterExpression) return data;
+  
+  // Implementación básica de filtros OData
+  // Soporta filtros simples como: name eq 'valor' o id eq 'guid'
+  const filterRegex = /(\w+)\s+(eq|ne|gt|lt|ge|le)\s+'([^']+)'/i;
+  const match = filterExpression.match(filterRegex);
+  
+  if (!match) return data;
+  
+  const [, property, operator, value] = match;
+  
+  return data.filter(item => {
+    const itemValue = item[property];
+    switch (operator.toLowerCase()) {
+      case 'eq':
+        return itemValue === value;
+      case 'ne':
+        return itemValue !== value;
+      case 'gt':
+        return itemValue > value;
+      case 'lt':
+        return itemValue < value;
+      case 'ge':
+        return itemValue >= value;
+      case 'le':
+        return itemValue <= value;
+      default:
+        return true;
+    }
+  });
+}
+
+// Rutas del servicio OData
+
+// Documento raíz del servicio
+app.get(`${API_PREFIX}/`, (req, res) => {
+  try {
+    const serviceDoc = generateServiceDocument(BASE_URL);
+    res.json(serviceDoc);
+  } catch (error) {
+    console.error('Error generando documento de servicio:', error);
+    res.status(500).json(formatODataError('InternalServerError', 'Error interno del servidor'));
+  }
+});
+
+// Metadatos del servicio
+app.get(`${API_PREFIX}/$metadata`, (req, res) => {
+  try {
+    const metadata = generateMetadata(BASE_URL);
+    res.set('Content-Type', 'application/xml');
+    res.send(metadata);
+  } catch (error) {
+    console.error('Error generando metadatos:', error);
+    res.status(500).json(formatODataError('InternalServerError', 'Error interno del servidor'));
+  }
+});
+
+// Obtener todas las colas virtuales
+app.get(`${API_PREFIX}/ods_genesysqueues`, (req, res) => {
+  try {
+    const queryParams = parseODataQuery(req.query);
+    
+    // Aplicar filtros
+    let filteredData = applyFilter(virtualQueuesData, queryParams.$filter);
+    
+    // Formatear respuesta OData
+    const odataResponse = formatODataCollection(
+      filteredData,
+      BASE_URL,
+      'ods_genesysqueues',
+      queryParams
+    );
+    
+    res.json(odataResponse);
+  } catch (error) {
+    console.error('Error obteniendo colas virtuales:', error);
+    res.status(500).json(formatODataError('InternalServerError', 'Error interno del servidor'));
+  }
+});
+
+// Obtener una cola virtual específica por ID (formato OData estándar)
+app.get(`${API_PREFIX}/ods_genesysqueues\\(:id\\)`, (req, res) => {
+  try {
+    const id = req.params.id;
+    const queue = virtualQueuesData.find(q => q.id === id);
+    
+    if (!queue) {
+      return res.status(404).json(
+        formatODataError('NotFound', `Cola virtual con ID '${id}' no encontrada`)
+      );
+    }
+    
+    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_genesysqueues');
+    res.json(odataResponse);
+  } catch (error) {
+    console.error('Error obteniendo cola virtual:', error);
+    res.status(500).json(formatODataError('InternalServerError', 'Error interno del servidor'));
+  }
+});
+
+// Ruta alternativa para obtener cola por ID usando parámetro de ruta simple
+app.get(`${API_PREFIX}/ods_genesysqueues/:id`, (req, res) => {
+  try {
+    const id = req.params.id;
+    const queue = virtualQueuesData.find(q => q.id === id);
+    
+    if (!queue) {
+      return res.status(404).json(
+        formatODataError('NotFound', `Cola virtual con ID '${id}' no encontrada`)
+      );
+    }
+    
+    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_genesysqueues');
+    res.json(odataResponse);
+  } catch (error) {
+    console.error('Error obteniendo cola virtual:', error);
+    res.status(500).json(formatODataError('InternalServerError', 'Error interno del servidor'));
+  }
+});
+
+// Manejo de rutas no encontradas
+app.use('*', (req, res) => {
+  res.status(404).json(
+    formatODataError('NotFound', `Recurso '${req.originalUrl}' no encontrado`)
+  );
+});
+
+// Manejo de errores globales
+app.use((error, req, res, next) => {
+  console.error('Error no manejado:', error);
+  res.status(500).json(
+    formatODataError('InternalServerError', 'Error interno del servidor')
+  );
+});
+
+// Función para iniciar el servidor
+function startServer() {
+  try {
+    // Intentar cargar certificados SSL
+    let server;
+    
+    try {
+      const privateKey = fs.readFileSync(path.join(__dirname, 'certs', 'private-key.pem'), 'utf8');
+      const certificate = fs.readFileSync(path.join(__dirname, 'certs', 'certificate.pem'), 'utf8');
+      
+      const credentials = {
+        key: privateKey,
+        cert: certificate
+      };
+      
+      server = https.createServer(credentials, app);
+      console.log('🔒 Servidor HTTPS configurado con certificados SSL');
+    } catch (certError) {
+      console.log('⚠️  No se encontraron certificados SSL, usando HTTP en su lugar');
+      console.log('💡 Para usar HTTPS, ejecuta: npm run generate-certs');
+      
+      // Fallback a HTTP si no hay certificados
+      const http = require('http');
+      server = http.createServer(app);
+    }
+    
+    server.listen(PORT, () => {
+      const protocol = server instanceof https.Server ? 'https' : 'http';
+      console.log('🚀 Servidor OData iniciado exitosamente');
+      console.log(`📡 URL base: ${protocol}://localhost:${PORT}`);
+      console.log('📋 Endpoints disponibles:');
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/                    - Documento de servicio`);
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/$metadata          - Metadatos del servicio`);
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_genesysqueues      - Todas las colas virtuales`);
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_genesysqueues(id)  - Cola específica por ID`);
+      console.log('');
+      console.log('📖 Ejemplos de uso:');
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_genesysqueues`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_genesysqueues?$top=3&$count=true`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_genesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)`);
+    });
+    
+  } catch (error) {
+    console.error('❌ Error iniciando servidor:', error.message);
+    process.exit(1);
+  }
+}
+
+// Iniciar servidor
+startServer();
+
+module.exports = app;
