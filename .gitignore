@@ -1,0 +1,92 @@
+# Dependencias de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Archivos temporales del sistema operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Archivos de IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Certificados SSL (generados localmente)
+certs/
+*.pem
+*.key
+*.crt
+
+# Archivos de distribución
+dist/
+build/
+
+# Coverage directory usado por herramientas como istanbul
+coverage/
+*.lcov
+
+# Directorio de dependencias de nyc
+.nyc_output
+
+# Archivos de cache
+.npm
+.eslintcache
+
+# Archivos de runtime de Node.js
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directorio de librerías instrumentadas generadas por jscoverage/JSCover
+lib-cov
+
+# Directorio de coverage generado por grunt
+coverage
+
+# Instrumentación de nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Archivos de backup
+*.backup
+*.bak
+*.tmp
