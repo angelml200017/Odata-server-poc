@@ -55,12 +55,12 @@ GET https://localhost:8443/api/data/v1/$metadata
 
 ### 📊 Todas las Colas Virtuales
 ```http
-GET https://localhost:8443/api/data/v1/ods_genesysqueues
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue
 ```
 
 ### 🎯 Cola Virtual Específica
 ```http
-GET https://localhost:8443/api/data/v1/ods_genesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)
 ```
 
 ## Consultas OData Soportadas
@@ -68,66 +68,69 @@ GET https://localhost:8443/api/data/v1/ods_genesysqueues(a1b2c3d4-e5f6-4789-a012
 ### Paginación
 ```http
 # Obtener los primeros 3 registros
-GET https://localhost:8443/api/data/v1/ods_genesysqueues?$top=3
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=3
 
 # Saltar los primeros 2 registros y obtener 3
-GET https://localhost:8443/api/data/v1/ods_genesysqueues?$skip=2&$top=3
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$skip=2&$top=3
 
 # Incluir el conteo total
-GET https://localhost:8443/api/data/v1/ods_genesysqueues?$count=true
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$count=true
 ```
 
 ### Filtros
 ```http
 # Filtrar por nombre exacto
-GET https://localhost:8443/api/data/v1/ods_genesysqueues?$filter=name eq 'Cola de Procesamiento de Pagos'
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$filter=ods_name eq 'Cola de Procesamiento de Pagos'
 
 # Filtrar por ID
-GET https://localhost:8443/api/data/v1/ods_genesysqueues?$filter=id eq 'a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789'
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$filter=ods_virtualgenesysqueueid eq 'a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789'
 ```
 
 ### Combinación de parámetros
 ```http
-GET https://localhost:8443/api/data/v1/ods_genesysqueues?$top=5&$count=true&$filter=name eq 'Cola de Backup Automático'
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=5&$count=true&$filter=ods_name eq 'Cola de Backup Automático'
 ```
 
 ## Estructura de Datos
 
-### Cola Virtual
+### Virtual Queue
 ```json
 {
-  "id": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
-  "name": "Cola de Procesamiento de Pagos"
+  "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+  "ods_name": "Payment Processing Queue",
+  "ods_description": "Processes customer payments in real time."
 }
 ```
 
-### Respuesta OData de Colección
+### OData Collection Response
 ```json
 {
-  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_genesysqueues",
+  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_virtualgenesysqueue",
   "@odata.count": 8,
   "@odata.nextLink": null,
   "value": [
     {
-      "@odata.id": "https://localhost:8443/api/data/v1/ods_genesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
-      "@odata.editLink": "ods_genesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
-      "@odata.type": "#GenesysQueue",
-      "id": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
-      "name": "Cola de Procesamiento de Pagos"
+      "@odata.id": "https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+      "@odata.editLink": "ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+      "@odata.type": "#VirtualGenesysQueue",
+      "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+      "ods_name": "Payment Processing Queue",
+      "ods_description": "Processes customer payments in real time."
     }
   ]
 }
 ```
 
-### Respuesta OData de Entidad Única
+### OData Single Entity Response
 ```json
 {
-  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_genesysqueues/$entity",
-  "@odata.id": "https://localhost:8443/api/data/v1/ods_genesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
-  "@odata.editLink": "ods_genesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
-  "@odata.type": "#GenesysQueue",
-  "id": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
-  "name": "Cola de Procesamiento de Pagos"
+  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_virtualgenesysqueue/$entity",
+  "@odata.id": "https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+  "@odata.editLink": "ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+  "@odata.type": "#VirtualGenesysQueue",
+  "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+  "ods_name": "Payment Processing Queue",
+  "ods_description": "Processes customer payments in real time."
 }
 ```
 
@@ -135,12 +138,12 @@ GET https://localhost:8443/api/data/v1/ods_genesysqueues?$top=5&$count=true&$fil
 
 ### Obtener todas las colas
 ```bash
-curl -k https://localhost:8443/api/data/v1/ods_genesysqueues
+curl -k https://localhost:8443/api/data/v1/ods_virtualgenesysqueue
 ```
 
 ### Obtener cola específica
 ```bash
-curl -k https://localhost:8443/api/data/v1/ods_genesysqueues\(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789\)
+curl -k https://localhost:8443/api/data/v1/ods_virtualgenesysqueue\(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789\)
 ```
 
 ### Obtener metadatos
@@ -150,21 +153,21 @@ curl -k https://localhost:8443/api/data/v1/\$metadata
 
 ### Consulta con filtros
 ```bash
-curl -k "https://localhost:8443/api/data/v1/ods_genesysqueues?\$filter=name%20eq%20%27Cola%20de%20Procesamiento%20de%20Pagos%27"
+curl -k "https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?\$filter=ods_name%20eq%20%27Cola%20de%20Procesamiento%20de%20Pagos%27"
 ```
 
 ## Datos de Ejemplo
 
-El servidor incluye 8 colas virtuales de ejemplo:
+The server includes 8 example virtual queues:
 
-1. **Cola de Procesamiento de Pagos** - `a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789`
-2. **Cola de Notificaciones Push** - `f7e8d9c0-b1a2-4356-9087-1f2e3d4c5b6a`
-3. **Cola de Validación de Documentos** - `3b2c1d0e-9f8a-4567-8901-2b3c4d5e6f7a`
-4. **Cola de Procesamiento de Imágenes** - `7c6b5a49-3e2d-4123-8907-6f5e4d3c2b1a`
-5. **Cola de Sincronización de Base de Datos** - `e9f8a7b6-c5d4-4890-a123-b456c789d012`
-6. **Cola de Envío de Correos Electrónicos** - `2d3c4b5a-6978-4567-9abc-def012345678`
-7. **Cola de Backup Automático** - `9a8b7c6d-5e4f-4123-8901-234567890abc`
-8. **Cola de Análisis de Logs** - `5f4e3d2c-1b0a-4789-8456-123def456789`
+1. **Payment Processing Queue** - `a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789`
+2. **Push Notification Queue** - `f7e8d9c0-b1a2-4356-9087-1f2e3d4c5b6a`
+3. **Document Validation Queue** - `3b2c1d0e-9f8a-4567-8901-2b3c4d5e6f7a`
+4. **Image Processing Queue** - `7c6b5a49-3e2d-4123-8907-6f5e4d3c2b1a`
+5. **Database Synchronization Queue** - `e9f8a7b6-c5d4-4890-a123-b456c789d012`
+6. **Email Sending Queue** - `2d3c4b5a-6978-4567-9abc-def012345678`
+7. **Automatic Backup Queue** - `9a8b7c6d-5e4f-4123-8901-234567890abc`
+8. **Log Analysis Queue** - `5f4e3d2c-1b0a-4789-8456-123def456789`
 
 ## Configuración HTTPS
 

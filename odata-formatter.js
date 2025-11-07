@@ -47,11 +47,11 @@ function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {
  */
 function formatODataEntity(entity, baseUrl, entitySetName) {
   // Determinar el tipo basado en el nombre de la entidad
-  const entityType = entitySetName === 'ods_genesysqueues' ? 'GenesysQueue' : entitySetName.slice(0, -1);
-  
+  const entityType = entitySetName === 'ods_virtualgenesysqueue' ? 'VirtualGenesysQueue' : entitySetName.slice(0, -1);
+  const idField = 'ods_virtualgenesysqueueid';
   return {
-    "@odata.id": `${baseUrl}/${entitySetName}(${entity.id})`,
-    "@odata.editLink": `${entitySetName}(${entity.id})`,
+    "@odata.id": `${baseUrl}/${entitySetName}(${entity[idField]})`,
+    "@odata.editLink": `${entitySetName}(${entity[idField]})`,
     "@odata.type": `#${entityType}`,
     ...entity
   };
@@ -84,16 +84,17 @@ function generateMetadata(baseUrl) {
   return `<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
   <edmx:DataServices>
-    <Schema Namespace="GenesysQueuesService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
-      <EntityType Name="GenesysQueue">
+    <Schema Namespace="VirtualGenesysQueuesService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="VirtualGenesysQueue">
         <Key>
-          <PropertyRef Name="id"/>
+          <PropertyRef Name="ods_virtualgenesysqueueid"/>
         </Key>
-        <Property Name="id" Type="Edm.Guid" Nullable="false"/>
-        <Property Name="name" Type="Edm.String" Nullable="false" MaxLength="255"/>
+        <Property Name="ods_virtualgenesysqueueid" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="ods_name" Type="Edm.String" Nullable="false" MaxLength="255"/>
+        <Property Name="ods_description" Type="Edm.String" Nullable="true" MaxLength="512"/>
       </EntityType>
       <EntityContainer Name="Container">
-        <EntitySet Name="ods_genesysqueues" EntityType="GenesysQueuesService.GenesysQueue"/>
+        <EntitySet Name="ods_virtualgenesysqueue" EntityType="VirtualGenesysQueuesService.VirtualGenesysQueue"/>
       </EntityContainer>
     </Schema>
   </edmx:DataServices>
@@ -110,9 +111,9 @@ function generateServiceDocument(baseUrl) {
     "@odata.context": `${baseUrl}/$metadata`,
     value: [
       {
-        name: "ods_genesysqueues",
+        name: "ods_virtualgenesysqueue",
         kind: "EntitySet",
-        url: "ods_genesysqueues"
+        url: "ods_virtualgenesysqueue"
       }
     ]
   };

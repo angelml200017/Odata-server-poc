@@ -1,34 +1,42 @@
 [
   {
-    "id": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
-    "name": "Cola de Procesamiento de Pagos"
+    "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+  "ods_name": "Payment Processing Queue",
+  "ods_description": "Processes customer payments in real time."
   },
   {
-    "id": "f7e8d9c0-b1a2-4356-9087-1f2e3d4c5b6a",
-    "name": "Cola de Notificaciones Push"
+    "ods_virtualgenesysqueueid": "f7e8d9c0-b1a2-4356-9087-1f2e3d4c5b6a",
+  "ods_name": "Push Notification Queue",
+  "ods_description": "Sends push notifications to mobile devices."
   },
   {
-    "id": "3b2c1d0e-9f8a-4567-8901-2b3c4d5e6f7a",
-    "name": "Cola de Validación de Documentos"
+    "ods_virtualgenesysqueueid": "3b2c1d0e-9f8a-4567-8901-2b3c4d5e6f7a",
+  "ods_name": "Document Validation Queue",
+  "ods_description": "Validates documents uploaded by users."
   },
   {
-    "id": "7c6b5a49-3e2d-4123-8907-6f5e4d3c2b1a",
-    "name": "Cola de Procesamiento de Imágenes"
+    "ods_virtualgenesysqueueid": "7c6b5a49-3e2d-4123-8907-6f5e4d3c2b1a",
+  "ods_name": "Image Processing Queue",
+  "ods_description": "Processes and transforms received images."
   },
   {
-    "id": "e9f8a7b6-c5d4-4890-a123-b456c789d012",
-    "name": "Cola de Sincronización de Base de Datos"
+    "ods_virtualgenesysqueueid": "e9f8a7b6-c5d4-4890-a123-b456c789d012",
+  "ods_name": "Database Synchronization Queue",
+  "ods_description": "Synchronizes data between distributed databases."
   },
   {
-    "id": "2d3c4b5a-6978-4567-9abc-def012345678",
-    "name": "Cola de Envío de Correos Electrónicos"
+    "ods_virtualgenesysqueueid": "2d3c4b5a-6978-4567-9abc-def012345678",
+  "ods_name": "Email Sending Queue",
+  "ods_description": "Manages the sending of emails to users."
   },
   {
-    "id": "9a8b7c6d-5e4f-4123-8901-234567890abc",
-    "name": "Cola de Backup Automático"
+    "ods_virtualgenesysqueueid": "9a8b7c6d-5e4f-4123-8901-234567890abc",
+  "ods_name": "Automatic Backup Queue",
+  "ods_description": "Performs automatic backup operations."
   },
   {
-    "id": "5f4e3d2c-1b0a-4789-8456-123def456789",
-    "name": "Cola de Análisis de Logs"
+    "ods_virtualgenesysqueueid": "5f4e3d2c-1b0a-4789-8456-123def456789",
+  "ods_name": "Log Analysis Queue",
+  "ods_description": "Analyzes and processes event logs."
   }
 ]
