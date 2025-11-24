@@ -55,12 +55,12 @@ GET https://localhost:8443/api/data/v1/$metadata
 
 ### 📊 Todas las Colas Virtuales
 ```http
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues
 ```
 
 ### 🎯 Cola Virtual Específica
 ```http
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)
 ```
 
 ## Consultas OData Soportadas
@@ -68,27 +68,27 @@ GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-478
 ### Paginación
 ```http
 # Obtener los primeros 3 registros
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=3
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?$top=3
 
 # Saltar los primeros 2 registros y obtener 3
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$skip=2&$top=3
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?$skip=2&$top=3
 
 # Incluir el conteo total
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$count=true
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?$count=true
 ```
 
 ### Filtros
 ```http
 # Filtrar por nombre exacto
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$filter=ods_name eq 'Cola de Procesamiento de Pagos'
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?$filter=ods_name eq 'Cola de Procesamiento de Pagos'
 
 # Filtrar por ID
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$filter=ods_virtualgenesysqueueid eq 'a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789'
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?$filter=ods_virtualgenesysqueuesid eq 'a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789'
 ```
 
 ### Combinación de parámetros
 ```http
-GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=5&$count=true&$filter=ods_name eq 'Cola de Backup Automático'
+GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?$top=5&$count=true&$filter=ods_name eq 'Cola de Backup Automático'
 ```
 
 ## Estructura de Datos
@@ -96,7 +96,7 @@ GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=5&$count=tru
 ### Virtual Queue
 ```json
 {
-  "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+  "ods_virtualgenesysqueuesid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
   "ods_name": "Payment Processing Queue",
   "ods_description": "Processes customer payments in real time."
 }
@@ -105,15 +105,15 @@ GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=5&$count=tru
 ### OData Collection Response
 ```json
 {
-  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_virtualgenesysqueue",
+  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_virtualgenesysqueues",
   "@odata.count": 8,
   "@odata.nextLink": null,
   "value": [
     {
-      "@odata.id": "https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
-      "@odata.editLink": "ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+      "@odata.id": "https://localhost:8443/api/data/v1/ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+      "@odata.editLink": "ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
       "@odata.type": "#VirtualGenesysQueue",
-      "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+      "ods_virtualgenesysqueuesid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
       "ods_name": "Payment Processing Queue",
       "ods_description": "Processes customer payments in real time."
     }
@@ -124,11 +124,11 @@ GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=5&$count=tru
 ### OData Single Entity Response
 ```json
 {
-  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_virtualgenesysqueue/$entity",
-  "@odata.id": "https://localhost:8443/api/data/v1/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
-  "@odata.editLink": "ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+  "@odata.context": "https://localhost:8443/api/data/v1/$metadata#ods_virtualgenesysqueues/$entity",
+  "@odata.id": "https://localhost:8443/api/data/v1/ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
+  "@odata.editLink": "ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)",
   "@odata.type": "#VirtualGenesysQueue",
-  "ods_virtualgenesysqueueid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
+  "ods_virtualgenesysqueuesid": "a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789",
   "ods_name": "Payment Processing Queue",
   "ods_description": "Processes customer payments in real time."
 }
@@ -138,12 +138,12 @@ GET https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?$top=5&$count=tru
 
 ### Obtener todas las colas
 ```bash
-curl -k https://localhost:8443/api/data/v1/ods_virtualgenesysqueue
+curl -k https://localhost:8443/api/data/v1/ods_virtualgenesysqueues
 ```
 
 ### Obtener cola específica
 ```bash
-curl -k https://localhost:8443/api/data/v1/ods_virtualgenesysqueue\(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789\)
+curl -k https://localhost:8443/api/data/v1/ods_virtualgenesysqueues\(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789\)
 ```
 
 ### Obtener metadatos
@@ -153,7 +153,7 @@ curl -k https://localhost:8443/api/data/v1/\$metadata
 
 ### Consulta con filtros
 ```bash
-curl -k "https://localhost:8443/api/data/v1/ods_virtualgenesysqueue?\$filter=ods_name%20eq%20%27Cola%20de%20Procesamiento%20de%20Pagos%27"
+curl -k "https://localhost:8443/api/data/v1/ods_virtualgenesysqueues?\$filter=ods_name%20eq%20%27Cola%20de%20Procesamiento%20de%20Pagos%27"
 ```
 
 ## Datos de Ejemplo

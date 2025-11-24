@@ -111,7 +111,7 @@ app.get(`${API_PREFIX}/`, (req, res) => {
 });
 
 // Metadatos del servicio
-app.get(`${API_PREFIX}/$metadata`, (req, res) => {
+app.get(`${API_PREFIX}/\\$metadata`, (req, res) => {
   try {
     const metadata = generateMetadata(BASE_URL);
     res.set('Content-Type', 'application/xml');
@@ -123,7 +123,7 @@ app.get(`${API_PREFIX}/$metadata`, (req, res) => {
 });
 
 // Obtener todas las colas virtuales
-app.get(`${API_PREFIX}/ods_virtualgenesysqueue`, (req, res) => {
+app.get(`${API_PREFIX}/ods_virtualgenesysqueues`, (req, res) => {
   try {
     const queryParams = parseODataQuery(req.query);
     // Aplicar filtros
@@ -132,7 +132,7 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueue`, (req, res) => {
     const odataResponse = formatODataCollection(
       filteredData,
       BASE_URL,
-      'ods_virtualgenesysqueue',
+      'ods_virtualgenesysqueues',
       queryParams
     );
     res.json(odataResponse);
@@ -142,11 +142,11 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueue`, (req, res) => {
   }
 });
 
-// Obtener una cola virtual específica por ID (formato OData estándar OData: /ods_virtualgenesysqueue(<id>))
-app.get(`${API_PREFIX}/ods_virtualgenesysqueue*:idWithParens`, (req, res) => {
+// Obtener una cola virtual específica por ID (formato OData estándar OData: /ods_virtualgenesysqueues(<id>))
+app.get(`${API_PREFIX}/ods_virtualgenesysqueues*:idWithParens`, (req, res) => {
   try {
     // Extraer el id del path usando RegExp
-    const match = req.path.match(/ods_virtualgenesysqueue\(([^)]+)\)$/);
+    const match = req.path.match(/ods_virtualgenesysqueues\(([^)]+)\)$/);
     const id = match ? match[1] : null;
     if (!id) {
       return res.status(400).json(formatODataError('BadRequest', 'ID inválido en la ruta'));
@@ -157,7 +157,7 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueue*:idWithParens`, (req, res) => {
         formatODataError('NotFound', `Cola virtual con ods_virtualgenesysqueueid '${id}' no encontrada`)
       );
     }
-    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_virtualgenesysqueue');
+    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_virtualgenesysqueues');
     res.json(odataResponse);
   } catch (error) {
     console.error('Error obteniendo cola virtual:', error);
@@ -166,7 +166,7 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueue*:idWithParens`, (req, res) => {
 });
 
 // Ruta alternativa para obtener cola por ID usando parámetro de ruta simple
-app.get(`${API_PREFIX}/ods_virtualgenesysqueue/:id`, (req, res) => {
+app.get(`${API_PREFIX}/ods_virtualgenesysqueues/:id`, (req, res) => {
   try {
     const id = req.params.id;
     const queue = virtualGenesysQueuesData.find(q => q.ods_virtualgenesysqueueid === id);
@@ -175,7 +175,7 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueue/:id`, (req, res) => {
         formatODataError('NotFound', `Cola virtual con ods_virtualgenesysqueueid '${id}' no encontrada`)
       );
     }
-    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_virtualgenesysqueue');
+    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_virtualgenesysqueues');
     res.json(odataResponse);
   } catch (error) {
     console.error('Error obteniendo cola virtual:', error);
@@ -231,13 +231,13 @@ function startServer() {
   console.log('📋 Endpoints disponibles:');
   console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/                    - Documento de servicio`);
   console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/$metadata          - Metadatos del servicio`);
-  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueue      - Todas las colas virtuales`);
-  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueue(id)  - Cola específica por ID`);
+  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues      - Todas las colas virtuales`);
+  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues(id)  - Cola específica por ID`);
   console.log('');
   console.log('📖 Ejemplos de uso:');
-  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueue`);
-  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueue?$top=3&$count=true`);
-  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueue(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)`);
+  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues`);
+  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$top=3&$count=true`);
+  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)`);
     });
     
   } catch (error) {
