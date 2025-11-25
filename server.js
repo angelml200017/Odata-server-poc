@@ -25,9 +25,46 @@ const BASE_URL = `https://localhost:${PORT}${API_PREFIX}`;
 app.use(cors());
 app.use(express.json());
 
-// Middleware para logging
+// Middleware para logging detallado
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  const timestamp = new Date().toISOString();
+  
+  // Obtener la IP real del cliente (considerando proxies)
+  const clientIp = req.headers['x-forwarded-for'] 
+    || req.headers['x-real-ip']
+    || req.connection.remoteAddress 
+    || req.socket.remoteAddress
+    || (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  
+  // Log detallado de la petición
+  console.log('┌─────────────────────────────────────────────────────────────');
+  console.log(`│ 📅 Timestamp: ${timestamp}`);
+  console.log(`│ 🌐 Client IP: ${clientIp}`);
+  console.log(`│ 🔹 Method: ${req.method}`);
+  console.log(`│ 🔗 URL: ${req.url}`);
+  console.log(`│ 📍 Path: ${req.path}`);
+  console.log(`│ 🔍 Query: ${JSON.stringify(req.query)}`);
+  console.log(`│ 📋 Headers:`);
+  console.log(`│   - User-Agent: ${req.headers['user-agent'] || 'N/A'}`);
+  console.log(`│   - Content-Type: ${req.headers['content-type'] || 'N/A'}`);
+  console.log(`│   - Accept: ${req.headers['accept'] || 'N/A'}`);
+  console.log(`│   - Host: ${req.headers['host'] || 'N/A'}`);
+  
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`│ 📦 Body: ${JSON.stringify(req.body)}`);
+  }
+  
+  // Capturar el tiempo de respuesta
+  const startTime = Date.now();
+  
+  // Interceptar la respuesta para log
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    console.log(`│ ✅ Status: ${res.statusCode} ${res.statusMessage || ''}`);
+    console.log(`│ ⏱️  Duration: ${duration}ms`);
+    console.log('└─────────────────────────────────────────────────────────────\n');
+  });
+  
   next();
 });
 
