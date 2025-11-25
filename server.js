@@ -30,11 +30,21 @@ app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   
   // Obtener la IP real del cliente (considerando proxies)
-  const clientIp = req.headers['x-forwarded-for'] 
+  let clientIp = req.headers['x-forwarded-for'] 
     || req.headers['x-real-ip']
     || req.connection.remoteAddress 
     || req.socket.remoteAddress
     || (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  
+  // Si x-forwarded-for contiene múltiples IPs, tomar solo la primera (cliente original)
+  if (clientIp && clientIp.includes(',')) {
+    clientIp = clientIp.split(',')[0].trim();
+  }
+  
+  // Limpiar formato IPv6 local (::1 o ::ffff:127.0.0.1)
+  if (clientIp) {
+    clientIp = clientIp.replace('::ffff:', '');
+  }
   
   // Log detallado de la petición
   console.log('┌─────────────────────────────────────────────────────────────');
