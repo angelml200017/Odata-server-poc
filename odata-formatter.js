@@ -83,101 +83,33 @@ function formatODataSingleEntity(entity, baseUrl, entitySetName) {
 function generateMetadata(baseUrl) {
   return `<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
-  <edmx:Reference Uri="https://vocabularies.odata.org/OData.Community.Keys.V1.xml">
-    <edmx:Include Namespace="OData.Community.Keys.V1" Alias="Keys"/>
-  </edmx:Reference>
-  <edmx:Reference Uri="https://vocabularies.odata.org/OData.Community.Display.V1.xml">
-    <edmx:Include Namespace="OData.Community.Display.V1" Alias="Display"/>
-  </edmx:Reference>
-  <edmx:DataServices>
-    <Schema Namespace="Microsoft.Dynamics.CRM" Alias="mscrm" xmlns="http://docs.oasis-open.org/odata/ns/edm">
-      
-      <!-- Virtual Genesys Queue Entity -->
-      <EntityType Name="ods_virtualgenesysqueue">
-         <Key>
-          <PropertyRef Name="ods_virtualgenesysqueueid"/>
-        </Key>
-        <Property Name="ods_virtualgenesysqueueid" Type="Edm.Guid" Nullable="false"/>
-        <Property Name="ods_name" Type="Edm.String" MaxLength="255">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Name of the virtual queue"/>
-        </Property>
-        <Property Name="ods_description" Type="Edm.String" MaxLength="512">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Description of the virtual queue"/>
-        </Property>
-        <Property Name="createdon" Type="Edm.DateTimeOffset">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Date and time when the record was created"/>
-        </Property>
-        <Property Name="modifiedon" Type="Edm.DateTimeOffset">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Date and time when the record was modified"/>
-        </Property>
-        <Property Name="statecode" Type="Edm.Int32">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Status of the virtual queue"/>
-        </Property>
-        <Property Name="statuscode" Type="Edm.Int32">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Reason for the status of the virtual queue"/>
-        </Property>
-      </EntityType>
-      
-      <!-- Entity Container -->
-      <EntityContainer Name="ServiceContext">
-        <EntitySet Name="ods_virtualgenesysqueues" EntityType="mscrm.ods_virtualgenesysqueue">
-          <Annotation Term="Org.OData.Core.V1.Description" String="Virtual Genesys queues for call center management"/>
-          <Annotation Term="Org.OData.Capabilities.V1.SearchRestrictions">
-            <Record>
-              <PropertyValue Property="Searchable" Bool="true"/>
-            </Record>
-          </Annotation>
-          <Annotation Term="Org.OData.Capabilities.V1.InsertRestrictions">
-            <Record>
-              <PropertyValue Property="Insertable" Bool="false"/>
-            </Record>
-          </Annotation>
-          <Annotation Term="Org.OData.Capabilities.V1.UpdateRestrictions">
-            <Record>
-              <PropertyValue Property="Updatable" Bool="false"/>
-            </Record>
-          </Annotation>
-          <Annotation Term="Org.OData.Capabilities.V1.DeleteRestrictions">
-            <Record>
-              <PropertyValue Property="Deletable" Bool="false"/>
-            </Record>
-          </Annotation>
-        </EntitySet>
-      </EntityContainer>
-      
-      <!-- Annotations -->
-      <Annotations Target="Microsoft.Dynamics.CRM.ServiceContext">
-        <Annotation Term="Org.OData.Capabilities.V1.ConformanceLevel">
-          <EnumMember>Org.OData.Capabilities.V1.ConformanceLevelType/Advanced</EnumMember>
-        </Annotation>
-        <Annotation Term="Org.OData.Capabilities.V1.SupportedFormats">
-          <Collection>
-            <String>application/json;odata.metadata=full</String>
-            <String>application/json;odata.metadata=minimal</String>
-            <String>application/json;odata.metadata=none</String>
-          </Collection>
-        </Annotation>
-        <Annotation Term="Org.OData.Capabilities.V1.FilterFunctions">
-          <Collection>
-            <String>contains</String>
-            <String>endswith</String>
-            <String>startswith</String>
-            <String>tolower</String>
-            <String>toupper</String>
-            <String>trim</String>
-            <String>length</String>
-            <String>year</String>
-            <String>month</String>
-            <String>day</String>
-            <String>hour</String>
-            <String>minute</String>
-            <String>second</String>
-          </Collection>
-        </Annotation>
-      </Annotations>
-      
-    </Schema>
-  </edmx:DataServices>
+    <edmx:Reference Uri="https://vocabularies.odata.org/OData.Community.Keys.V1.xml">
+        <edmx:Include Namespace="OData.Community.Keys.V1" Alias="Keys"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="https://vocabularies.odata.org/OData.Community.Display.V1.xml">
+        <edmx:Include Namespace="OData.Community.Display.V1" Alias="Display"/>
+    </edmx:Reference>
+    <edmx:DataServices>
+            <Schema Namespace="Space.OData" Alias="space" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+              <EntityType Name="spacebaseentity" Abstract="true" />
+              <EntityType Name="ods_virtualgenesysqueue" BaseType="space.spacebaseentity">
+                <Key>
+                    <PropertyRef Name="ods_virtualgenesysqueueid"/>
+                </Key>
+                <Property Name="ods_virtualgenesysqueueid" Type="Edm.Guid"/>
+                <Property Name="ods_name" Type="Edm.String"/>
+                <Property Name="ods_description" Type="Edm.String"/>
+                <Property Name="createdon" Type="Edm.DateTimeOffset"/>
+                <Property Name="modifiedon" Type="Edm.DateTimeOffset"/>
+                <Property Name="statecode" Type="Edm.Int32"/>
+                <Property Name="statuscode" Type="Edm.Int32"/>
+                <Property Name="versionnumber" Type="Edm.Int64"/>
+            </EntityType>
+            <EntityContainer Name="ServiceContext">
+                <EntitySet Name="ods_virtualgenesysqueues" EntityType="mscrm.ods_virtualgenesysqueue"/>
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
 </edmx:Edmx>`;
 }
 
