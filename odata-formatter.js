@@ -96,7 +96,7 @@ function generateMetadata(baseUrl) {
                 <Key>
                     <PropertyRef Name="ods_virtualgenesysqueueid"/>
                 </Key>
-                <Property Name="ods_virtualgenesysqueueid" Type="Edm.Guid"/>
+                <Property Name="ods_virtualgenesysqueueid" Type="Edm.Guid" Nullable="false"/>
                 <Property Name="ods_name" Type="Edm.String"/>
                 <Property Name="ods_description" Type="Edm.String"/>
                 <Property Name="createdon" Type="Edm.DateTimeOffset"/>
