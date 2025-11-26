@@ -105,6 +105,9 @@ function generateMetadata(baseUrl) {
                 <Property Name="statuscode" Type="Edm.Int32"/>
                 <Property Name="versionnumber" Type="Edm.Int64"/>
             </EntityType>
+            <EntityContainer Name="ServiceContext">
+                <EntitySet Name="ods_virtualgenesysqueues" EntityType="space.ods_virtualgenesysqueue"/>
+            </EntityContainer>
         </Schema>
     </edmx:DataServices>
 </edmx:Edmx>`;
