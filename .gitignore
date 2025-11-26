@@ -90,3 +90,4 @@ jspm_packages/
 *.backup
 *.bak
 *.tmp
+xmlexample.xml
