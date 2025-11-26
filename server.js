@@ -89,58 +89,151 @@ app.use((req, res, next) => {
 
 // Función para parsear parámetros de consulta OData
 function parseODataQuery(query) {
-  const params = {};
-  
-  if (query.$top) {
-    params.$top = parseInt(query.$top);
-  }
-  
-  if (query.$skip) {
-    params.$skip = parseInt(query.$skip);
-  }
-  
-  if (query.$count === 'true') {
-    params.$count = true;
-  }
-  
-  if (query.$filter) {
-    params.$filter = query.$filter;
-  }
-  
+  const params = {
+    $top: query.$top ? parseInt(query.$top) : undefined,
+    $skip: query.$skip ? parseInt(query.$skip) : 0,
+    $filter: query.$filter || null,
+    $orderby: query.$orderby || null,
+    $select: query.$select ? query.$select.split(',').map(f => f.trim()) : null,
+    $count: query.$count === 'true',
+    $search: query.$search || null
+  };
   return params;
 }
 
-// Función para aplicar filtros
+// Función para aplicar filtros OData
 function applyFilter(data, filterExpression) {
   if (!filterExpression) return data;
-  
-  // Implementación básica de filtros OData
-  // Soporta filtros simples como: name eq 'valor' o id eq 'guid'
-  const filterRegex = /(\w+)\s+(eq|ne|gt|lt|ge|le)\s+'([^']+)'/i;
-  const match = filterExpression.match(filterRegex);
-  
-  if (!match) return data;
-  
-  const [, property, operator, value] = match;
-  
-  return data.filter(item => {
-    const itemValue = item[property];
-    switch (operator.toLowerCase()) {
-      case 'eq':
-        return itemValue === value;
-      case 'ne':
-        return itemValue !== value;
-      case 'gt':
-        return itemValue > value;
-      case 'lt':
-        return itemValue < value;
-      case 'ge':
-        return itemValue >= value;
-      case 'le':
-        return itemValue <= value;
-      default:
-        return true;
+
+  try {
+    // Operadores soportados
+    const operators = {
+      'eq': (a, b) => a === b,
+      'ne': (a, b) => a !== b,
+      'gt': (a, b) => a > b,
+      'ge': (a, b) => a >= b,
+      'lt': (a, b) => a < b,
+      'le': (a, b) => a <= b,
+      'contains': (a, b) => String(a).toLowerCase().includes(String(b).toLowerCase()),
+      'startswith': (a, b) => String(a).toLowerCase().startsWith(String(b).toLowerCase()),
+      'endswith': (a, b) => String(a).toLowerCase().endsWith(String(b).toLowerCase())
+    };
+
+    // Detectar si es una función (contains, startswith, endswith)
+    const functionRegex = /(contains|startswith|endswith)\((\w+),\s*'([^']+)'\)/i;
+    const functionMatch = filterExpression.match(functionRegex);
+    
+    if (functionMatch) {
+      const [, operator, field, value] = functionMatch;
+      const operatorFn = operators[operator.toLowerCase()];
+      
+      if (!operatorFn) {
+        console.warn(`⚠️  Operador no soportado: ${operator}`);
+        return data;
+      }
+
+      const filtered = data.filter(item => {
+        const fieldValue = item[field];
+        return fieldValue ? operatorFn(fieldValue, value) : false;
+      });
+
+      console.log(`🔍 Filtro aplicado: ${operator}(${field}, '${value}') → ${filtered.length} resultados`);
+      return filtered;
     }
+
+    // Parsear expresión de filtro simple: "field operator value"
+    // Ejemplo: "ods_name eq 'Image Processing Queue'"
+    const filterRegex = /(\w+)\s+(eq|ne|gt|ge|lt|le)\s+(.+)/i;
+    const match = filterExpression.match(filterRegex);
+
+    if (!match) {
+      console.warn(`⚠️  Expresión de filtro no soportada: ${filterExpression}`);
+      return data;
+    }
+
+    const [, field, operator, rawValue] = match;
+    
+    // Limpiar el valor (remover comillas simples)
+    let value = rawValue.trim();
+    if ((value.startsWith("'") && value.endsWith("'")) || 
+        (value.startsWith('"') && value.endsWith('"'))) {
+      value = value.slice(1, -1);
+    }
+
+    // Convertir tipos
+    if (value === 'true') value = true;
+    else if (value === 'false') value = false;
+    else if (value === 'null') value = null;
+    else if (!isNaN(value) && value !== '') value = Number(value);
+
+    const operatorFn = operators[operator.toLowerCase()];
+    if (!operatorFn) {
+      console.warn(`⚠️  Operador no soportado: ${operator}`);
+      return data;
+    }
+
+    // Aplicar filtro
+    const filtered = data.filter(item => {
+      const fieldValue = item[field];
+      return operatorFn(fieldValue, value);
+    });
+
+    console.log(`🔍 Filtro aplicado: ${field} ${operator} '${value}' → ${filtered.length} resultados`);
+    return filtered;
+
+  } catch (error) {
+    console.error('❌ Error aplicando filtro:', error);
+    return data;
+  }
+}
+
+// Función para aplicar ordenamiento OData
+function applyOrderBy(data, orderByExpression) {
+  if (!orderByExpression) return data;
+
+  try {
+    const parts = orderByExpression.split(' ');
+    const field = parts[0];
+    const direction = parts[1]?.toLowerCase() === 'desc' ? -1 : 1;
+
+    return [...data].sort((a, b) => {
+      const aVal = a[field];
+      const bVal = b[field];
+      
+      if (aVal < bVal) return -1 * direction;
+      if (aVal > bVal) return 1 * direction;
+      return 0;
+    });
+  } catch (error) {
+    console.error('❌ Error aplicando ordenamiento:', error);
+    return data;
+  }
+}
+
+// Función para aplicar selección de campos
+function applySelect(data, selectFields) {
+  if (!selectFields || selectFields.length === 0) return data;
+
+  return data.map(item => {
+    const selectedItem = {};
+    selectFields.forEach(field => {
+      if (item.hasOwnProperty(field)) {
+        selectedItem[field] = item[field];
+      }
+    });
+    return selectedItem;
+  });
+}
+
+// Función para aplicar búsqueda
+function applySearch(data, searchTerm) {
+  if (!searchTerm) return data;
+
+  const term = searchTerm.toLowerCase();
+  return data.filter(item => {
+    return Object.values(item).some(value => 
+      String(value).toLowerCase().includes(term)
+    );
   });
 }
 
@@ -172,9 +265,50 @@ app.get(`${API_PREFIX}/\\$metadata`, (req, res) => {
 // Obtener todas las colas virtuales
 app.get(`${API_PREFIX}/ods_virtualgenesysqueues`, (req, res) => {
   try {
+    console.log('\n📊 Procesando petición GET /ods_virtualgenesysqueues');
+    
+    // Parsear parámetros OData
     const queryParams = parseODataQuery(req.query);
-    // Aplicar filtros
-    let filteredData = applyFilter(virtualGenesysQueuesData, queryParams.$filter);
+    console.log('🔧 Parámetros OData:', queryParams);
+    
+    let filteredData = [...virtualGenesysQueuesData];
+    
+    // Aplicar búsqueda ($search)
+    if (queryParams.$search) {
+      filteredData = applySearch(filteredData, queryParams.$search);
+      console.log(`🔎 Búsqueda aplicada: "${queryParams.$search}" → ${filteredData.length} resultados`);
+    }
+    
+    // Aplicar filtro ($filter)
+    if (queryParams.$filter) {
+      filteredData = applyFilter(filteredData, queryParams.$filter);
+    }
+    
+    // Aplicar ordenamiento ($orderby)
+    if (queryParams.$orderby) {
+      filteredData = applyOrderBy(filteredData, queryParams.$orderby);
+      console.log(`📊 Ordenamiento aplicado: ${queryParams.$orderby}`);
+    }
+    
+    const totalCount = filteredData.length;
+    
+    // Aplicar paginación ($skip y $top)
+    if (queryParams.$skip > 0) {
+      filteredData = filteredData.slice(queryParams.$skip);
+      console.log(`⏭️  Skip aplicado: ${queryParams.$skip}`);
+    }
+    
+    if (queryParams.$top) {
+      filteredData = filteredData.slice(0, queryParams.$top);
+      console.log(`🔢 Top aplicado: ${queryParams.$top}`);
+    }
+    
+    // Aplicar selección de campos ($select)
+    if (queryParams.$select) {
+      filteredData = applySelect(filteredData, queryParams.$select);
+      console.log(`📋 Select aplicado: ${queryParams.$select.join(', ')}`);
+    }
+    
     // Formatear respuesta OData
     const odataResponse = formatODataCollection(
       filteredData,
@@ -182,9 +316,17 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueues`, (req, res) => {
       'ods_virtualgenesysqueues',
       queryParams
     );
+    
+    // Agregar count si se solicita
+    if (queryParams.$count) {
+      odataResponse['@odata.count'] = totalCount;
+    }
+    
+    console.log(`✅ Respuesta generada: ${filteredData.length} registros${queryParams.$count ? ` (total: ${totalCount})` : ''}`);
     res.json(odataResponse);
+    
   } catch (error) {
-    console.error('Error obteniendo colas virtuales:', error);
+    console.error('❌ Error obteniendo colas virtuales:', error);
     res.status(500).json(formatODataError('InternalServerError', 'Error interno del servidor'));
   }
 });
@@ -275,16 +417,46 @@ function startServer() {
       const protocol = server instanceof https.Server ? 'https' : 'http';
       console.log('🚀 Servidor OData iniciado exitosamente');
       console.log(`📡 URL base: ${protocol}://localhost:${PORT}`);
-  console.log('📋 Endpoints disponibles:');
-  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/                    - Documento de servicio`);
-  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/$metadata          - Metadatos del servicio`);
-  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues      - Todas las colas virtuales`);
-  console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues(id)  - Cola específica por ID`);
-  console.log('');
-  console.log('📖 Ejemplos de uso:');
-  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues`);
-  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$top=3&$count=true`);
-  console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues(a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789)`);
+      console.log('');
+      console.log('📋 Endpoints disponibles:');
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/                         - Documento de servicio`);
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/$metadata               - Metadatos del servicio`);
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues  - Todas las colas virtuales`);
+      console.log(`   ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues(id) - Cola específica por ID`);
+      console.log('');
+      console.log('📖 Ejemplos básicos:');
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$top=3`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$count=true`);
+      console.log('');
+      console.log('🔍 Ejemplos de filtros ($filter):');
+      console.log(`   # Igualdad exacta:`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$filter=ods_name eq 'Image Processing Queue'`);
+      console.log('');
+      console.log(`   # Contiene texto (case-insensitive):`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$filter=contains(ods_name,'Processing')`);
+      console.log('');
+      console.log(`   # Empieza con:`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$filter=startswith(ods_name,'Email')`);
+      console.log('');
+      console.log(`   # Termina con:`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$filter=endswith(ods_description,'Queue')`);
+      console.log('');
+      console.log('📊 Ejemplos de ordenamiento ($orderby):');
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$orderby=ods_name`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$orderby=ods_name desc`);
+      console.log('');
+      console.log('📋 Ejemplos de selección de campos ($select):');
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$select=ods_name`);
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$select=ods_name,ods_description`);
+      console.log('');
+      console.log('🔎 Ejemplos de búsqueda global ($search):');
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$search=email`);
+      console.log('');
+      console.log('🎯 Ejemplos combinados:');
+      console.log(`   GET ${protocol}://localhost:${PORT}${API_PREFIX}/ods_virtualgenesysqueues?$filter=contains(ods_name,'Queue')&$orderby=ods_name&$top=3&$count=true`);
+      console.log('');
+      console.log('✅ Servidor listo para recibir peticiones...\n');
     });
     
   } catch (error) {
