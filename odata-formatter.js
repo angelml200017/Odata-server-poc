@@ -8,31 +8,68 @@
  * @param {string} baseUrl - URL base del servicio
  * @param {string} entitySetName - Nombre del conjunto de entidades
  * @param {Object} queryParams - Parámetros de consulta ($top, $skip, etc.)
+ * @param {number} totalCount - Total de registros antes de paginación (opcional)
  * @returns {Object} Respuesta formateada en OData v4
  */
-function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {}) {
-  const { $top, $skip = 0, $count } = queryParams;
+function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {}, totalCount = null) {
+  const { $top, $skip = 0, $count, $select, $filter, $orderby, $search } = queryParams;
   
   // Aplicar paginación si se especifica $top
   let pagedEntities = entities;
   if ($top) {
-    pagedEntities = entities.slice($skip, $skip + $top);
+    pagedEntities = entities.slice(0, $top);
   }
 
   const response = {
     "@odata.context": `${baseUrl}/$metadata#${entitySetName}`,
-    "@odata.nextLink": null,
     value: pagedEntities.map(entity => formatODataEntity(entity, baseUrl, entitySetName))
   };
 
   // Agregar count si se solicita
   if ($count) {
-    response["@odata.count"] = entities.length;
+    response["@odata.count"] = totalCount !== null ? totalCount : entities.length;
   }
 
-  // Agregar nextLink si hay más resultados
-  if ($top && ($skip + $top) < entities.length) {
-    response["@odata.nextLink"] = `${baseUrl}/${entitySetName}?$skip=${$skip + $top}&$top=${$top}`;
+  // Construir nextLink si hay más resultados
+  if ($top && entities.length > $top) {
+    const nextSkip = $skip + $top;
+    const queryParts = [];
+    
+    // Preservar el $select original en el nextLink
+    if ($select) {
+      queryParts.push(`$select=${Array.isArray($select) ? $select.join(',') : $select}`);
+    }
+    
+    // Preservar el $filter original
+    if ($filter) {
+      queryParts.push(`$filter=${encodeURIComponent($filter)}`);
+    }
+    
+    // Preservar el $orderby original
+    if ($orderby) {
+      queryParts.push(`$orderby=${encodeURIComponent($orderby)}`);
+    }
+    
+    // Preservar el $search original
+    if ($search) {
+      queryParts.push(`$search=${encodeURIComponent($search)}`);
+    }
+    
+    // Agregar $skip y $top para la siguiente página
+    queryParts.push(`$skip=${nextSkip}`);
+    queryParts.push(`$top=${$top}`);
+    
+    // Agregar $count si estaba en la petición original
+    if ($count) {
+      queryParts.push('$count=true');
+    }
+    
+    response["@odata.nextLink"] = `${baseUrl}/${entitySetName}?${queryParts.join('&')}`;
+    
+    console.log(`🔗 nextLink generado: $skip=${nextSkip}, $top=${$top}`);
+  } else {
+    // Si no hay más resultados, nextLink debe ser null
+    response["@odata.nextLink"] = null;
   }
 
   return response;
