@@ -92,16 +92,12 @@ function generateMetadata(baseUrl) {
   <edmx:DataServices>
     <Schema Namespace="Microsoft.Dynamics.CRM" Alias="mscrm" xmlns="http://docs.oasis-open.org/odata/ns/edm">
       
-      <!-- Base Entity Type -->
-      <EntityType Name="crmbaseentity" Abstract="true">
-        <Key>
+      <!-- Virtual Genesys Queue Entity -->
+      <EntityType Name="ods_virtualgenesysqueue">
+         <Key>
           <PropertyRef Name="ods_virtualgenesysqueueid"/>
         </Key>
         <Property Name="ods_virtualgenesysqueueid" Type="Edm.Guid" Nullable="false"/>
-      </EntityType>
-      
-      <!-- Virtual Genesys Queue Entity -->
-      <EntityType Name="ods_virtualgenesysqueue" BaseType="mscrm.crmbaseentity">
         <Property Name="ods_name" Type="Edm.String" MaxLength="255">
           <Annotation Term="Org.OData.Core.V1.Description" String="Name of the virtual queue"/>
         </Property>
