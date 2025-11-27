@@ -14,7 +14,10 @@
 function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {}, totalCount = null) {
   const { $top, $skip = 0, $count, $select, $filter, $orderby, $search } = queryParams;
   
-  // Aplicar paginación si se especifica $top
+  // Determinar si hay más resultados ANTES de aplicar $top
+  const hasMore = $top && entities.length > $top;
+  
+  // Aplicar paginación si se especifica $top (tomar solo los elementos a mostrar)
   let pagedEntities = entities;
   if ($top) {
     pagedEntities = entities.slice(0, $top);
@@ -30,8 +33,8 @@ function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {
     response["@odata.count"] = totalCount !== null ? totalCount : entities.length;
   }
 
-  // Construir nextLink si hay más resultados
-  if ($top && entities.length > $top) {
+  // Construir nextLink SOLO si hay más resultados
+  if (hasMore) {
     const nextSkip = $skip + $top;
     const queryParts = [];
     
@@ -66,10 +69,10 @@ function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {
     
     response["@odata.nextLink"] = `${baseUrl}/${entitySetName}?${queryParts.join('&')}`;
     
-    console.log(`🔗 nextLink generado: $skip=${nextSkip}, $top=${$top}`);
+    console.log(`🔗 nextLink generado: $skip=${nextSkip}, $top=${$top} (${entities.length - $top} resultados restantes)`);
   } else {
-    // Si no hay más resultados, nextLink debe ser null
-    response["@odata.nextLink"] = null;
+    // No agregar @odata.nextLink si no hay más páginas (omitir la propiedad completamente)
+    console.log(`✅ No hay más resultados - nextLink omitido`);
   }
 
   return response;

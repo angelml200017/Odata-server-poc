@@ -242,7 +242,12 @@ function applySearch(data, searchTerm) {
 // Documento raíz del servicio
 app.get(`${API_PREFIX}/`, (req, res) => {
   try {
-    const serviceDoc = generateServiceDocument(BASE_URL);
+    // Construir BASE_URL dinámico
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const dynamicBaseUrl = `${protocol}://${host}${API_PREFIX}`;
+    
+    const serviceDoc = generateServiceDocument(dynamicBaseUrl);
     res.json(serviceDoc);
   } catch (error) {
     console.error('Error generando documento de servicio:', error);
@@ -253,7 +258,12 @@ app.get(`${API_PREFIX}/`, (req, res) => {
 // Metadatos del servicio
 app.get(`${API_PREFIX}/\\$metadata`, (req, res) => {
   try {
-    const metadata = generateMetadata(BASE_URL);
+    // Construir BASE_URL dinámico
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const dynamicBaseUrl = `${protocol}://${host}${API_PREFIX}`;
+    
+    const metadata = generateMetadata(dynamicBaseUrl);
     res.set('Content-Type', 'application/xml');
     res.send(metadata);
   } catch (error) {
@@ -266,6 +276,13 @@ app.get(`${API_PREFIX}/\\$metadata`, (req, res) => {
 app.get(`${API_PREFIX}/ods_virtualgenesysqueues`, (req, res) => {
   try {
     console.log('\n📊 Procesando petición GET /ods_virtualgenesysqueues');
+    
+    // Construir BASE_URL dinámico basado en la petición actual
+    const protocol = req.protocol; // 'http' o 'https'
+    const host = req.get('host'); // 'localhost:8443' o el host real
+    const dynamicBaseUrl = `${protocol}://${host}${API_PREFIX}`;
+    
+    console.log(`🔗 Base URL dinámica: ${dynamicBaseUrl}`);
     
     // Parsear parámetros OData
     const queryParams = parseODataQuery(req.query);
@@ -290,39 +307,46 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueues`, (req, res) => {
       console.log(`📊 Ordenamiento aplicado: ${queryParams.$orderby}`);
     }
     
+    // Guardar el total ANTES de paginación
     const totalCount = filteredData.length;
     
-    // Aplicar paginación ($skip y $top)
+    // Aplicar $skip
     if (queryParams.$skip > 0) {
       filteredData = filteredData.slice(queryParams.$skip);
       console.log(`⏭️  Skip aplicado: ${queryParams.$skip}`);
     }
     
+    // Si hay $top, tomar $top + 1 elementos para saber si hay más páginas
+    let dataToFormat = filteredData;
     if (queryParams.$top) {
-      filteredData = filteredData.slice(0, queryParams.$top);
-      console.log(`🔢 Top aplicado: ${queryParams.$top}`);
+      dataToFormat = filteredData.slice(0, queryParams.$top + 1);
+      console.log(`🔢 Top solicitado: ${queryParams.$top} (tomando ${dataToFormat.length} para verificar nextLink)`);
     }
     
-    // Aplicar selección de campos ($select)
+    // Aplicar selección de campos ($select) DESPUÉS de determinar paginación
     if (queryParams.$select) {
-      filteredData = applySelect(filteredData, queryParams.$select);
+      dataToFormat = applySelect(dataToFormat, queryParams.$select);
       console.log(`📋 Select aplicado: ${queryParams.$select.join(', ')}`);
     }
     
-    // Formatear respuesta OData
+    // Formatear respuesta OData con queryParams completos y baseUrl dinámico
     const odataResponse = formatODataCollection(
-      filteredData,
-      BASE_URL,
+      dataToFormat,
+      dynamicBaseUrl, // Usar la URL dinámica basada en la petición
       'ods_virtualgenesysqueues',
-      queryParams
+      {
+        $top: queryParams.$top,
+        $skip: queryParams.$skip,
+        $count: queryParams.$count,
+        $select: queryParams.$select,
+        $filter: req.query.$filter,
+        $orderby: req.query.$orderby,
+        $search: req.query.$search
+      },
+      totalCount
     );
     
-    // Agregar count si se solicita
-    if (queryParams.$count) {
-      odataResponse['@odata.count'] = totalCount;
-    }
-    
-    console.log(`✅ Respuesta generada: ${filteredData.length} registros${queryParams.$count ? ` (total: ${totalCount})` : ''}`);
+    console.log(`✅ Respuesta generada: ${odataResponse.value.length} registros${queryParams.$count ? ` (total: ${totalCount})` : ''}`);
     res.json(odataResponse);
     
   } catch (error) {
@@ -334,6 +358,11 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueues`, (req, res) => {
 // Obtener una cola virtual específica por ID (formato OData estándar OData: /ods_virtualgenesysqueues(<id>))
 app.get(`${API_PREFIX}/ods_virtualgenesysqueues*:idWithParens`, (req, res) => {
   try {
+    // Construir BASE_URL dinámico
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const dynamicBaseUrl = `${protocol}://${host}${API_PREFIX}`;
+    
     // Extraer el id del path usando RegExp
     const match = req.path.match(/ods_virtualgenesysqueues\(([^)]+)\)$/);
     const id = match ? match[1] : null;
@@ -346,7 +375,7 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueues*:idWithParens`, (req, res) => {
         formatODataError('NotFound', `Cola virtual con ods_virtualgenesysqueueid '${id}' no encontrada`)
       );
     }
-    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_virtualgenesysqueues');
+    const odataResponse = formatODataSingleEntity(queue, dynamicBaseUrl, 'ods_virtualgenesysqueues');
     res.json(odataResponse);
   } catch (error) {
     console.error('Error obteniendo cola virtual:', error);
@@ -357,6 +386,11 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueues*:idWithParens`, (req, res) => {
 // Ruta alternativa para obtener cola por ID usando parámetro de ruta simple
 app.get(`${API_PREFIX}/ods_virtualgenesysqueues/:id`, (req, res) => {
   try {
+    // Construir BASE_URL dinámico
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const dynamicBaseUrl = `${protocol}://${host}${API_PREFIX}`;
+    
     const id = req.params.id;
     const queue = virtualGenesysQueuesData.find(q => q.ods_virtualgenesysqueueid === id);
     if (!queue) {
@@ -364,7 +398,7 @@ app.get(`${API_PREFIX}/ods_virtualgenesysqueues/:id`, (req, res) => {
         formatODataError('NotFound', `Cola virtual con ods_virtualgenesysqueueid '${id}' no encontrada`)
       );
     }
-    const odataResponse = formatODataSingleEntity(queue, BASE_URL, 'ods_virtualgenesysqueues');
+    const odataResponse = formatODataSingleEntity(queue, dynamicBaseUrl, 'ods_virtualgenesysqueues');
     res.json(odataResponse);
   } catch (error) {
     console.error('Error obteniendo cola virtual:', error);
