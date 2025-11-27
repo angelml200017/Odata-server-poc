@@ -8,7 +8,7 @@
  * @param {string} baseUrl - URL base del servicio
  * @param {string} entitySetName - Nombre del conjunto de entidades
  * @param {Object} queryParams - Parámetros de consulta ($top, $skip, etc.)
- * @param {number} totalCount - Total de registros antes de paginación (opcional)
+* * @param {number} totalCount - Total de registros antes de paginación (opcional)
  * @returns {Object} Respuesta formateada en OData v4
  */
 function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {}, totalCount = null) {
@@ -83,13 +83,14 @@ function formatODataCollection(entities, baseUrl, entitySetName, queryParams = {
  * @returns {Object} Entidad formateada en OData v4
  */
 function formatODataEntity(entity, baseUrl, entitySetName) {
-  // Determinar el tipo basado en el nombre de la entidad
-  const entityType = entitySetName === 'ods_virtualgenesysqueues' ? 'VirtualGenesysQueue' : entitySetName.slice(0, -1);
   const idField = 'ods_virtualgenesysqueueid';
+  
+  // IMPORTANTE: @odata.type DEBE ser la primera propiedad según OData v4
   return {
+    "@odata.type": "#space.ods_virtualgenesysqueue",
     "@odata.id": `${baseUrl}/${entitySetName}(${entity[idField]})`,
     "@odata.editLink": `${entitySetName}(${entity[idField]})`,
-    "@odata.type": `#${entityType}`,
+    "@odata.etag": `W/"${entity.versionnumber || '1'}"`,
     ...entity
   };
 }
@@ -106,9 +107,16 @@ function formatODataSingleEntity(entity, baseUrl, entitySetName) {
     return null;
   }
 
+  const idField = 'ods_virtualgenesysqueueid';
+  
+  // IMPORTANTE: @odata.context primero, @odata.type segundo según OData v4
   return {
     "@odata.context": `${baseUrl}/$metadata#${entitySetName}/$entity`,
-    ...formatODataEntity(entity, baseUrl, entitySetName)
+    "@odata.type": "#space.ods_virtualgenesysqueue",
+    "@odata.id": `${baseUrl}/${entitySetName}(${entity[idField]})`,
+    "@odata.editLink": `${entitySetName}(${entity[idField]})`,
+    "@odata.etag": `W/"${entity.versionnumber || '1'}"`,
+    ...entity
   };
 }
 
